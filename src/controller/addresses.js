@@ -1,5 +1,6 @@
 const Address = require('../models/Address.js');
 const { connect, closeConnection } = require('../configs/db.js');
+const validator = require('express-validator');
 
 exports.createNewAddress = async (req, res) => {
     console.log(req.body);

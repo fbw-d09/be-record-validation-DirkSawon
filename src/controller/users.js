@@ -1,43 +1,52 @@
 const User = require('../models/User.js');
 const { connect, closeConnection } = require('../configs/db.js');
+const validator = require('express-validator');
 
-exports.createNewUser = async (req, res) => {
+exports.createNewUser = async, validator.body('email').isEmail().trim(), validator.body('password').isLength({ min: 8, max: 16 }), (req, res) => {
     console.log(req.body);
 
     const { id, firstname, lastname, email, password, address } = req.body;
 
-    try {
-        connect().then(async (db) => {
-            const newUser = new User({
-                id,
-                firstname,
-                lastname,
-                email,
-                password,
-                address
-            });
+    const errors = validator.validationResult(req).errors;
 
-            console.log(newUser);
+    if(errors.length > 0) {
+        return res.status(400).json({ errors });
+    }
+    else {
 
-            newUser
-            .save()
-            .then(doc => {
-                res.status(201).json({
-                    success: true,
-                    data: doc
-                })
-            })
-            .catch(err => {
-                res.status(400).json({
-                    success: false,
-                    message: err.message
+        try {
+            connect().then(async (db) => {
+                const newUser = new User({
+                    id,
+                    firstname,
+                    lastname,
+                    email,
+                    password,
+                    address
                 });
+            
+                console.log(newUser);
+            
+                newUser
+                .save()
+                .then(doc => {
+                    res.status(201).json({
+                        success: true,
+                        data: doc
+                    })
+                })
+                .catch(err => {
+                    res.status(400).json({
+                        success: false,
+                        message: err.message
+                    });
+                })
+            
             })
-
-        })
-        
-    } catch (error) {
-        console.log(error.message);
+            
+        } catch (error) {
+            console.log(error.message);
+        }
     }
 };
 

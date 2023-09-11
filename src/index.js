@@ -14,6 +14,8 @@ const Record = require('./models/Record.js');
 const User = require('./models/User.js');
 const Address = require('./models/Address.js');
 
+const validator = require('express-validator');
+
 const { connect, closeConnection } = require('./configs/db.js');
 
 const app = express();
@@ -175,6 +177,7 @@ app.use("/users", users);
 app.use("/orders", orders);
 app.use("/records", records);
 app.use("/addresses", addresses);
+app.use(validator);
 
 const port = process.env.PORT;
 

@@ -1,5 +1,6 @@
 const Record = require('../models/Record.js');
 const { connect, closeConnection } = require('../configs/db.js');
+const validator = require('express-validator');
 
 exports.createNewRecord = async (req, res) => {
     console.log(req.body);

@@ -1,5 +1,6 @@
 const Order = require('../models/Order.js');
 const { connect, closeConnection } = require('../configs/db.js');
+const validator = require('express-validator');
 
 exports.createNewOrder = async (req, res) => {
     console.log(req.body);
