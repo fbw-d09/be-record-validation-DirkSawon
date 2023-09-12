@@ -1,22 +1,35 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { Schema, model } = require('mongoose');
 //const address = require('./Address.js');
+const secret = "EinGeheimerSchlüssel";
 
 const addressSchema = new Schema({
     street: String,
     city: String
 }, { timestamps: true});
 
-const schema = new Schema({
+const userSchema = new Schema({
     id: Number,
     firstname: String,
     lastname: String,
-    email: String,
-    password: String,
+    email: { type: String, required: true },
+    password: { type: String, required: true },
     address: addressSchema
 }, { timestamps: true});
 
-const userModel = new model('User', schema, 'users');
+userSchema.methods.hashPassword = (password) => {
+    return crypto.createHmac('sha256', secret).update(password).digest('hex');
+};
+
+userSchema.methods.comparePassword = function (loginPassword) {
+    if(this.password !== this.hashPassword(loginPassword)) {
+        return false;
+    }
+    return true;
+};
+
+const userModel = new model('User', userSchema, 'users');
 
 module.exports = userModel;
 

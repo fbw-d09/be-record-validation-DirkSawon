@@ -177,7 +177,7 @@ app.use("/users", users);
 app.use("/orders", orders);
 app.use("/records", records);
 app.use("/addresses", addresses);
-app.use(validator);
+//app.use(validator);
 
 const port = process.env.PORT;
 

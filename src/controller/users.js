@@ -1,29 +1,49 @@
 const User = require('../models/User.js');
 const { connect, closeConnection } = require('../configs/db.js');
 const validator = require('express-validator');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
-exports.createNewUser = async, validator.body('email').isEmail().trim(), validator.body('password').isLength({ min: 8, max: 16 }), (req, res) => {
+const signAccessToken = data => {
+    return jwt.sign(data, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
+}
+
+const verifyToken = (req, res, next) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split (' ')[1];
+
+        const decodedData = jwt.verify(token, process.env.TOKEN_SECRET);
+
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "NOT AUTHORIZED!"});
+    }
+}
+
+exports.createNewUser = /* validator.body('email').isEmail().trim(), validator.body('password').isLength({ min: 8, max: 16 }), */ async (req, res) => {
     console.log(req.body);
 
     const { id, firstname, lastname, email, password, address } = req.body;
 
-    const errors = validator.validationResult(req).errors;
+    /* const errors = validator.validationResult(req).errors;
 
     if(errors.length > 0) {
         return res.status(400).json({ errors });
     }
-    else {
+    else { */
 
         try {
             connect().then(async (db) => {
-                const newUser = new User({
-                    id,
-                    firstname,
-                    lastname,
-                    email,
-                    password,
-                    address
-                });
+                const newUser = new User();
+
+                newUser.id = id;
+                newUser.firstname = firstname;
+                newUser.lastname = lastname;
+                newUser.email = email;
+                newUser.password = newUser.hashPassword(password);
+                newUser.address = address;
+                
             
                 console.log(newUser);
             
@@ -47,8 +67,33 @@ exports.createNewUser = async, validator.body('email').isEmail().trim(), validat
         } catch (error) {
             console.log(error.message);
         }
-    }
+    /* } */
 };
+
+exports.authUser = async (req, res) => {
+    const { id, password } = req.body;
+
+    User.findOne({ id }).then(foundUser => {
+        if(foundUser) {
+            if(foundUser.comparePassword(password)) {
+                res.status(200).json({ success: true, token: signAccessToken({ id })
+                })
+            }
+            else {
+                res.status(401).json({
+                    success: false,
+                    message: "Incorrect login data"
+                })
+            }
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: "User not found!"
+            })
+        }
+    })
+}
 
 exports.getAllUsers = async (req, res) => {
     try {
@@ -467,7 +512,9 @@ exports.filterUser = async (req, res) => {
     //res.status(200).json({ success: true, criteria: criteria, filter1: filter1, filter2: filter2, filter3: filter3 });
 };
 
-exports.getUser = async (req, res) => {
+
+// per Authentifizierung absichern
+exports.getUser = verifyToken, async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -492,7 +539,8 @@ exports.getUser = async (req, res) => {
     }
 };
 
-exports.updateUser = async (req, res) => {
+// per Authentifizierung absichern
+exports.updateUser = verifyToken, async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -512,7 +560,7 @@ exports.updateUser = async (req, res) => {
                     newData: doc
                 }))
                 .catch(err => res.status(400).json({
-                    success: true,
+                    success: false,
                     message: err.message
                 }));
             })
@@ -523,7 +571,8 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-exports.deleteUser = async (req, res) => {
+// per Authentifizierung absichern
+exports.deleteUser = verifyToken, async (req, res) => {
     const { id } = req.params;
 
     try {

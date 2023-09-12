@@ -1,3 +1,18 @@
 address id: 64f8784122306c55314e91f9
 
 user id: 64edf583a2f417ee61c7bf93
+------------------------------------------------------
+
+2023-09-11 be-record-validation:
+Übung: Validation / Sanitization
+Füge dem Recordshop Validation (gültige Daten) und Sanitization (saubere Daten) hinzu, um sicher zu stellen, das die Daten, welche in der Datenbank gespeichert werden, die gewünschte Qualität haben.
+Hier  findest du eine documentation, zu verfügbaren Methoden.
+Priorität in dieser Übung hat erstmal der User Controller. Wenn du diesen fertig hast, kannst du auch eine validation / sanitization zu Order und Record hinzufügen. (bearbeitet) 
+
+help & reference zum Thema validation / sanitization
+------------------------------------------------------
+
+2023-09-12 JWT:
+Füge dem Rekordshop einen User Login hinzu, um einzelne routes zu schützen. Die route user/:id soll geschützt werden. Das heißt get, put  und delete user soll nur für den eingeloggten Nutzer möglich sein.
+------------------------------------------------------
+
