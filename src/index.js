@@ -1,4 +1,5 @@
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -178,6 +179,7 @@ app.use("/orders", orders);
 app.use("/records", records);
 app.use("/addresses", addresses);
 //app.use(validator);
+app.use(cookieParser);
 
 const port = process.env.PORT;
 

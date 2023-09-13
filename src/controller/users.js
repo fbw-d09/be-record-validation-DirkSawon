@@ -3,6 +3,29 @@ const { connect, closeConnection } = require('../configs/db.js');
 const validator = require('express-validator');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+//const cookieParser = require('cookie-parser');
+const secret = process.env.TOKEN_SECRET;
+
+const authorize = (req, res, next) => {
+    const token = req.cookies.access_token;
+
+    console.log(token);
+
+    if(!token) {
+        return res.sendStatus(403);
+    }
+
+    try {
+        const data = jwt.verify(token, secret);
+        req.email = data.email;
+        req.password = data.password;
+        next();
+    } catch (error) {
+        return res.sendStatus(403);
+    }
+};
+
+
 
 const signAccessToken = data => {
     return jwt.sign(data, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
@@ -20,6 +43,40 @@ const verifyToken = (req, res, next) => {
         res.status(401).json({ message: "NOT AUTHORIZED!"});
     }
 }
+
+exports.loginUser = async (req, res) => {
+    const { email, password } = req.body;
+
+    const token = jwt.sign({ email, password }, secret);
+
+    return res.cookie('access_token', 
+        token, {
+            maxAge: 24 * 60 * 60 * 1000, // 1 Tag  // 30 Minuten: 30 * 60 * 1000
+            httpOnly: true
+        })
+        .status(200)
+        .json({
+            success: true,
+            message: `User mit der Email-Addresse ${ email } eingeloggt`
+        });
+};
+
+exports.testLoggedInUser = (authorize, async (req, res) => {
+    const { email, password } = req;
+
+    res.status(200).json({
+        success: true,
+        email,
+        message: "User is allowed to visit this resource"
+    });
+});
+
+exports.logoutUser = (authorize, async (req, res) => {
+    return res.clearCookie('access_token').status(200).json({
+        success: true,
+        message: 'User wurde erfolgreich ausgeloggt'
+    });
+});
 
 exports.createNewUser = /* validator.body('email').isEmail().trim(), validator.body('password').isLength({ min: 8, max: 16 }), */ async (req, res) => {
     console.log(req.body);
