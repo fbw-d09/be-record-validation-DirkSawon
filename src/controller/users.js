@@ -3,9 +3,12 @@ const { connect, closeConnection } = require('../configs/db.js');
 const validator = require('express-validator');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const userModel = require('../models/User.js');
 //const cookieParser = require('cookie-parser');
 const secret = process.env.TOKEN_SECRET;
 
+
+// Authorization via Cookie
 const authorize = (req, res, next) => {
     const token = req.cookies.access_token;
 
@@ -26,7 +29,7 @@ const authorize = (req, res, next) => {
 };
 
 
-
+// Authorization via AccessToken
 const signAccessToken = data => {
     return jwt.sign(data, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
 }
@@ -44,10 +47,13 @@ const verifyToken = (req, res, next) => {
     }
 }
 
+// Methoden für Routen
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const token = jwt.sign({ email, password }, secret);
+
+    console.log(token);
 
     return res.cookie('access_token', 
         token, {
@@ -62,13 +68,34 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.testLoggedInUser = (authorize, async (req, res) => {
-    const { email, password } = req;
+    const { email/* , password */ } = req.body;
 
-    res.status(200).json({
+    try {
+        connect().then(async (db) => {
+            User
+            .find({ email })
+            .then(docs => {
+                res.status(200).json({
+                    success: true,  
+                    data: docs
+                })
+            })
+            .catch(err => {
+                res.status(404).json({
+                    success: false,
+                    message: err.message
+                })
+            })
+        })
+    } catch (error) {
+        console.log(error.message);
+    }
+
+    /* res.status(200).json({
         success: true,
         email,
         message: "User is allowed to visit this resource"
-    });
+    }); */
 });
 
 exports.logoutUser = (authorize, async (req, res) => {
