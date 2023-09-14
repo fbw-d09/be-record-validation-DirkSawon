@@ -6,7 +6,7 @@ exports.authorize = async (req, res, next) => {
     //console.log("req.cookies:", req.cookies);
     
     const token = req.cookies.access_token;
-    console.log(token);    
+    //console.log(token);    
  
 
     if(!token) {
@@ -15,7 +15,7 @@ exports.authorize = async (req, res, next) => {
 
     try {
         const data = jwt.verify(token, secret);
-        console.log("token", token, "verified");
+        //console.log("token", token, "verified");
         next();
     } catch (error) {
         return res.sendStatus(403);

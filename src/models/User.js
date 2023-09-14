@@ -15,6 +15,7 @@ const userSchema = new Schema({
     lastname: String,
     email: { type: String, required: true },
     password: { type: String, required: true },
+    role: { type: String },
     address: addressSchema
 }, { timestamps: true});
 

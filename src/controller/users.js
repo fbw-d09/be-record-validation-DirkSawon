@@ -7,10 +7,6 @@ const userModel = require('../models/User.js');
 //const cookieParser = require('cookie-parser');
 const secret = process.env.TOKEN_SECRET;
 
-
-
-
-
 // Authorization via AccessToken
 const signAccessToken = data => {
     return jwt.sign(data, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
@@ -129,10 +125,6 @@ exports.getAllUsers = async (req, res) => {
     }
 };
 
-
-
-
-
 // per Authentifizierung absichern
 exports.getUser = /* verifyToken,  */async (req, res) => {
     const { id } = req.params;
@@ -222,7 +214,7 @@ exports.loginUser = async (req, res) => {
 
     const token = jwt.sign({ email, password }, secret);
 
-    console.log(token);
+    //console.log(token);
 
     return res.cookie('access_token', 
         token, {
