@@ -172,6 +172,7 @@ if (args[0] === "init" && args[1] === "-db") {
 
 };
 
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use("/users", users);
@@ -179,7 +180,22 @@ app.use("/orders", orders);
 app.use("/records", records);
 app.use("/addresses", addresses);
 //app.use(validator);
-app.use(cookieParser);
+
+app.use((req, res, next) => {
+  const error = new Error('Not Found');
+  error.status = 404;
+  next(error);
+});
+
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+      error: {
+          message: error.message
+      }
+  });
+});
 
 const port = process.env.PORT;
 

@@ -8,25 +8,7 @@ const userModel = require('../models/User.js');
 const secret = process.env.TOKEN_SECRET;
 
 
-// Authorization via Cookie
-const authorize = (req, res, next) => {
-    const token = req.cookies.access_token;
 
-    console.log(token);
-
-    if(!token) {
-        return res.sendStatus(403);
-    }
-
-    try {
-        const data = jwt.verify(token, secret);
-        req.email = data.email;
-        req.password = data.password;
-        next();
-    } catch (error) {
-        return res.sendStatus(403);
-    }
-};
 
 
 // Authorization via AccessToken
@@ -48,62 +30,7 @@ const verifyToken = (req, res, next) => {
 }
 
 // Methoden für Routen
-exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
 
-    const token = jwt.sign({ email, password }, secret);
-
-    console.log(token);
-
-    return res.cookie('access_token', 
-        token, {
-            maxAge: 24 * 60 * 60 * 1000, // 1 Tag  // 30 Minuten: 30 * 60 * 1000
-            httpOnly: true
-        })
-        .status(200)
-        .json({
-            success: true,
-            message: `User mit der Email-Addresse ${ email } eingeloggt`
-        });
-};
-
-exports.testLoggedInUser = (authorize, async (req, res) => {
-    const { email/* , password */ } = req.body;
-
-    try {
-        connect().then(async (db) => {
-            User
-            .find({ email })
-            .then(docs => {
-                res.status(200).json({
-                    success: true,  
-                    data: docs
-                })
-            })
-            .catch(err => {
-                res.status(404).json({
-                    success: false,
-                    message: err.message
-                })
-            })
-        })
-    } catch (error) {
-        console.log(error.message);
-    }
-
-    /* res.status(200).json({
-        success: true,
-        email,
-        message: "User is allowed to visit this resource"
-    }); */
-});
-
-exports.logoutUser = (authorize, async (req, res) => {
-    return res.clearCookie('access_token').status(200).json({
-        success: true,
-        message: 'User wurde erfolgreich ausgeloggt'
-    });
-});
 
 exports.createNewUser = /* validator.body('email').isEmail().trim(), validator.body('password').isLength({ min: 8, max: 16 }), */ async (req, res) => {
     console.log(req.body);
@@ -202,6 +129,150 @@ exports.getAllUsers = async (req, res) => {
     }
 };
 
+
+
+
+
+// per Authentifizierung absichern
+exports.getUser = /* verifyToken,  */async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        connect().then(async (db) => {
+            User
+            .findOne({ id: id}).populate("address", "-_id") // .findOne({ _id: id})
+            .then(doc => {
+                res.status(200).json({
+                    success: true,
+                    data: doc
+                });
+            })
+            .catch(err => {
+                res.status(404).json({
+                    success: false,
+                    message: err.message
+                })
+            })
+        })
+    } catch (error) {
+        console.log(error.message);
+    }
+};
+
+// per Authentifizierung absichern
+exports.updateUser = /* verifyToken,  */async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        connect().then(async (db) => {
+            User
+            .findOne({ id: id}) // .findOne({ _id: id})
+            .then(doc => {
+                doc.firstname = req.body.firstname || doc.firstname;
+                doc.lastname = req.body.lastname || doc.lastname;
+                doc.email = req.body.email || doc.email;
+                doc.password = req.body.password || doc.password;
+                doc.address = req.body.address || doc.address
+
+                doc.save()
+                .then(doc => res.status(200).json({
+                    success: true,
+                    newData: doc
+                }))
+                .catch(err => res.status(400).json({
+                    success: false,
+                    message: err.message
+                }));
+            })
+            .catch(err => console.log(err))
+        });
+    } catch (error) {
+        
+    }
+};
+
+// per Authentifizierung absichern
+exports.deleteUser = /* verifyToken, */ async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        connect().then(async (db) => {
+            User
+            .deleteOne({ _id: id }) // .deleteOne({ _id: id })
+            .then(doc => {
+                res.status(200).json({
+                    success: false,
+                    message: "User wurde gelöscht"
+                })
+            })
+            .catch(err => {
+                res.status(404).json({
+                    success: false,
+                    message: err.messsage
+                })
+            })
+        })
+    } catch (error) {
+        console.log(error.message);
+    }
+};
+
+exports.loginUser = async (req, res) => {
+    const { email, password } = req.body;
+
+    const token = jwt.sign({ email, password }, secret);
+
+    console.log(token);
+
+    return res.cookie('access_token', 
+        token, {
+            maxAge: 24 * 60 * 60 * 1000, // 1 Tag  // 30 Minuten: 30 * 60 * 1000
+            httpOnly: true
+        })
+        .status(200)
+        .json({
+            success: true,
+            message: `User mit der Email-Addresse ${ email } eingeloggt`
+        });
+};
+
+exports.testLoggedInUser = async (req, res) => {
+    const { email/* , password */ } = req.body;
+
+    try {
+        connect().then(async (db) => {
+            User
+            .find({ email })
+            .then(docs => {
+                res.status(200).json({
+                    success: true,  
+                    data: docs
+                })
+            })
+            .catch(err => {
+                res.status(404).json({
+                    success: false,
+                    message: err.message
+                })
+            })
+        })
+    } catch (error) {
+        console.log(error.message);
+    }
+
+    /* res.status(200).json({
+        success: true,
+        email,
+        message: "User is allowed to visit this resource"
+    }); */
+};
+
+exports.logoutUser = (async (req, res) => {
+    return res.clearCookie('access_token').status(200).json({
+        success: true,
+        message: 'User wurde erfolgreich ausgeloggt'
+    });
+});
 
 // Brain-Stormen wie eine Filterfunktion via GET Anfrage realisiert werden kann (z.B. über Routen, welche Parameter übergeben werden, usw.)
 exports.filterUser = async (req, res) => {
@@ -594,89 +665,4 @@ exports.filterUser = async (req, res) => {
     //console.log(filters);
 
     //res.status(200).json({ success: true, criteria: criteria, filter1: filter1, filter2: filter2, filter3: filter3 });
-};
-
-
-// per Authentifizierung absichern
-exports.getUser = verifyToken, async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        connect().then(async (db) => {
-            User
-            .findOne({ id: id}).populate("address", "-_id") // .findOne({ _id: id})
-            .then(doc => {
-                res.status(200).json({
-                    success: true,
-                    data: doc
-                });
-            })
-            .catch(err => {
-                res.status(404).json({
-                    success: false,
-                    message: err.message
-                })
-            })
-        })
-    } catch (error) {
-        console.log(error.message);
-    }
-};
-
-// per Authentifizierung absichern
-exports.updateUser = verifyToken, async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        connect().then(async (db) => {
-            User
-            .findOne({ id: id}) // .findOne({ _id: id})
-            .then(doc => {
-                doc.firstname = req.body.firstname || doc.firstname;
-                doc.lastname = req.body.lastname || doc.lastname;
-                doc.email = req.body.email || doc.email;
-                doc.password = req.body.password || doc.password;
-                doc.address = req.body.address || doc.address
-
-                doc.save()
-                .then(doc => res.status(200).json({
-                    success: true,
-                    newData: doc
-                }))
-                .catch(err => res.status(400).json({
-                    success: false,
-                    message: err.message
-                }));
-            })
-            .catch(err => console.log(err))
-        });
-    } catch (error) {
-        
-    }
-};
-
-// per Authentifizierung absichern
-exports.deleteUser = verifyToken, async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        connect().then(async (db) => {
-            User
-            .deleteOne({ _id: id }) // .deleteOne({ _id: id })
-            .then(doc => {
-                res.status(200).json({
-                    success: false,
-                    message: "User wurde gelöscht"
-                })
-            })
-            .catch(err => {
-                res.status(404).json({
-                    success: false,
-                    message: err.messsage
-                })
-            })
-        })
-    } catch (error) {
-        console.log(error.message);
-    }
 };
