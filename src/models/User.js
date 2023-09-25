@@ -16,7 +16,7 @@ const userSchema = new Schema({
     email: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String },
-    address: addressSchema
+    address: { type: addressSchema, ref: "Address" }
 }, { timestamps: true});
 
 userSchema.methods.hashPassword = (password) => {

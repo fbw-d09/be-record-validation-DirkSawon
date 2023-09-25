@@ -42,6 +42,10 @@ exports.createNewUser = /* validator.body('email').isEmail().trim(), validator.b
 
         try {
             connect().then(async (db) => {
+                cost newAddress = new Address();
+                newAddress.street = street;
+                newAddress.city = city;
+                
                 const newUser = new User();
 
                 newUser.id = id;
@@ -53,6 +57,8 @@ exports.createNewUser = /* validator.body('email').isEmail().trim(), validator.b
                 
             
                 console.log(newUser);
+            	
+            	newAddress.save();
             
                 newUser
                 .save()

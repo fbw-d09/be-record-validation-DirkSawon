@@ -5,13 +5,13 @@ const validation = require('./../middleware/validation.js');
 
 const userController = require('./../controller/users.js');
 
-router.route("/").get(userController.getAllUsers).post(userController.createNewUser);
+router.route("/").get(userController.getAllUsers).post(/* validation.method, */ userController.createNewUser);
 
 //router.route("/auth").post(userController.authUser);
 
 router.route("/filter").get(userController.filterUser);
 
-router.route("/:id").get(authorization.authorize, userController.getUser).put(authorization.authorize, userController.updateUser).delete(authorization.authorize, userController.deleteUser)//.post(userController.authUser);
+router.route("/:id").get(authorization.authorize, userController.getUser).put(authorization.authorize, /* validation.method, */ userController.updateUser).delete(authorization.authorize, userController.deleteUser)//.post(userController.authUser);
 
 // Test Routes for cookie-parser:
 router.route("/login").post(userController.loginUser);
